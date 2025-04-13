@@ -2,7 +2,13 @@
 #define BASE_STRUCTS
 
 typedef struct {
-	char** content;
+	char* str;
+	int length;
+	int last_reallocation_size;
+	} String;
+
+typedef struct {
+	String* content;
 	char* filename;
 	int lines_amount;
 	} WorkState;

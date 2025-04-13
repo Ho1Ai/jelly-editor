@@ -3,6 +3,7 @@
 
 #include "base-files/functions-output.hpp"
 #include "help-list/help.hpp"
+#include "editor/editor.hpp"
 
 using namespace std;
 
@@ -17,6 +18,8 @@ int main (int argc, char** argv) {
 
 	if (strcmp(argv[1], "--help") == OUTPUT__STRCMP_SAMESTR) {
 		cout << HELP_LIST_OUTPUT << endl;
+	} else {
+		int editorControlState = editorControl(argv);
 		}
 
 	return status_code;

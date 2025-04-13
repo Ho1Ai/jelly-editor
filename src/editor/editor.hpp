@@ -1,6 +1,6 @@
 #ifndef EDITOR
 #define EDITOR
 
-int editorControl();
+int editorControl(char** start_props);
 
 #endif

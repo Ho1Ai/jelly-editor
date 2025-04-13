@@ -6,6 +6,3 @@ CFLAGS = $(SRC)/{main,base-files/std-mem-man,editor/editor,base-files/lines-coun
 make: 
 	$(CC) $(CFLAGS)
 
-make_all:
-	$(CC) $(CFLAGS)
-

@@ -1,13 +1,15 @@
-Collapse Open Source 
+Collapse Open Source Team
 
 Developers:
 - Ho1Ai
 
-Open source project. License - GNU GPL 3.0. Learn more on GitHub: https://github.com/Ho1Ai/jelly-ed
+Open source project. License - GNU GPL 3.0. Feel free to re-use project code. Learn more on GitHub: https://github.com/Ho1Ai/jelly-editor
 
 Standard names template:
 - variables - snake_case
+- labels - snake_case
 - constants (const and #define) - CAPS_CASE
 - functions - camelCase
 - structures (structs) - PascalCase
 - filenames - kebab-case
+- catalog names - kebab-case
