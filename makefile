@@ -1,0 +1,7 @@
+CC = g++
+SRC = src
+BUILD = build/application
+CFLAGS = $(SRC)/{main,base-files/std-mem-man,editor/editor}.cpp -o $(BUILD)/start.bin
+
+make: 
+	$(CC) $(CFLAGS)

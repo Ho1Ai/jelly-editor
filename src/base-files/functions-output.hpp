@@ -1,0 +1,9 @@
+#ifndef FUNCTIONS_OUTPUTS
+#define FUNCTIONS_OUTPUTS
+
+#define OUTPUT__STRCMP_SAMESTR 0
+#define OK 0
+#define MAIN__NOT_ENOUGH_ARGUMENTS 1
+#define VERC__CURR_VERSION "00001a (0.0.1a)"
+
+#endif
