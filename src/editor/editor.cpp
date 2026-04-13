@@ -175,7 +175,7 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 		String empty_line{(char*) malloc(sizeof(char)), 0, 1};
 
 		for (int i = work_state->lines_amount-1 ; i  > line ; --i) {
-			if (i != 0) // yeah, how will it be 0 if the line itself is 0? Well, then gonna add some different stuff
+			if (i != 0) 
 				work_state->content[i] = work_state->content[i-1];
 			else
 				{
