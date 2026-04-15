@@ -8,6 +8,7 @@
 
 #define OUT_ALL -1
 #define END_EXECUTION_FLAG -808
+#define EOL '\0'
 
 using namespace std;
 
@@ -173,20 +174,21 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 		work_state->content = (String*)realloc(work_state->content, (1+work_state->lines_amount++)*sizeof(String));
 
 		String empty_line{(char*) malloc(sizeof(char)), 0, 1};
+		
+		empty_line.str[0] = EOL; // yeah, the bug was here... Lol, so hard to see, that I forgot about end of line
 
 		for (int i = work_state->lines_amount-1 ; i  > line ; --i) {
-			if (i != 0) 
-				work_state->content[i] = work_state->content[i-1];
-			else
-				{
-				printf("Setting 0 line on \\0");
-				String empty{(char*)malloc(sizeof(char)), 0, 1};
-				empty.str[0] = '\0';
-				work_state->content[0] = empty;	
-				}
+			work_state->content[i] = work_state->content[i-1];
 		}
-	
 		work_state->content[line] = empty_line;
+		/*		
+		if(line == 0) {
+			printf("Setting 0 line on \\0");
+			String empty = String{(char*)malloc(sizeof(char)), 0, 1};
+			empty.str[0] = '\0';
+			work_state->content[0] = empty;	 
+			}*/
+		
 	/*
 	String new_str;
 	new_str.str = (char*)malloc(1*sizeof(char));
