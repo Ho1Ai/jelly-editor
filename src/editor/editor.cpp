@@ -25,6 +25,15 @@ void LOCAL__dropInformation(WorkState* work_state) {
 	}
 
 
+
+int LOCAL__createSwap(WorkState* work_state) {
+	
+	}
+
+
+
+
+
 int initializeStringsWithZero(WorkState* work_state, int length) {
 	int status_code = 0;
 
@@ -85,6 +94,79 @@ int commandList__outOpt(WorkState* work_state, int start_pos, int end_pos) {
 	return status_code;
 	}
 
+int commandList__rmOpt(WorkState* work_state, int line, int position_start, int position_end) {
+	int status_code = 0;
+
+	if(line < 0) {
+		status_code = 1;
+		goto fall_with_error__rm;
+		}
+	
+	if(line >= work_state->lines_amount){
+		//printf("Line is above lines amount. setting to lines amount as default\n");
+		line = work_state->lines_amount - 1;
+		status_code = 4;
+		goto fall_with_error__rm;
+		}
+	
+	if(position_start < 0) {
+		status_code = 2;
+		goto fall_with_error__rm;
+		}
+	
+	if(position_start > work_state->content[line].length) {
+		status_code = 3;
+		goto fall_with_error__rm;
+		}
+	
+	if(position_end >= work_state->content[line].length) {
+		//printf("position end is above line length. Setting position end as line length as default.\n");
+		position_end = work_state->content[line].length - 1;
+		status_code = 4;
+		goto fall_with_error__rm;
+		}
+	
+	if(status_code == 0) {
+		char* line_start = (char*) malloc(sizeof(char)*position_start+1);
+		for(int i = 0 ; i < position_start; ++i) {
+			line_start[i] = work_state->content[line].str[i];
+			}
+		line_start[position_start] = '\0';
+		//printf("%s\n", line_start);
+		char* line_end = (char*) malloc(sizeof(char)*(work_state->content[line].length-position_end+1));
+		for(int i = 0 ; i < work_state->content[line].length-position_end; ++i){
+			line_end[i] = work_state->content[line].str[work_state->content[line].length-position_end+i+1];
+			}
+
+		line_end[position_end]='\0';
+		//printf("%s%s\n", line_start, line_end);
+		char* line_final = (char*) malloc(sizeof(char)*(position_start+work_state->content[line].length-position_end+1));
+		int line_length = 0;
+		for(int i = 0 ; i < position_start; ++i) {
+			line_final[i] = line_start[i];
+			line_length++;
+			}
+		int tmp_status = 0;
+		for(int i = 0 ; i < work_state->content[line].length-position_end; ++i){
+			line_final[position_start+i] = line_end[i];
+			tmp_status = i+1;
+			line_length++;
+			}
+		work_state->content[line].str[position_start+tmp_status] = '\0';
+		//printf("%s\n", line_final);
+		free(line_start);
+		free(line_end);
+		free(work_state->content[line].str);
+		work_state->content[line].str = line_final;
+		work_state->content[line].length = line_length;
+		work_state->content[line].last_reallocation_size = position_start+work_state->content[line].length-position_end+1;
+		}
+	
+
+	fall_with_error__rm:
+	return status_code;
+	}
+
 int commandList__insOpt(WorkState* work_state, int line, int position) {
 	int status_code = 0;
 
@@ -103,8 +185,10 @@ int commandList__insOpt(WorkState* work_state, int line, int position) {
 		}
 	
 	if (position > work_state->content[line].length) {
-		printf("Position is greater than line length. Setting on line length as maximum possible position.\n");
+		//printf("Position is greater than line length. Setting on line length as maximum possible position.\n");
 		position = work_state->content[line].length;
+		status_code = 3;
+		goto fall_with_error__ins;
 		}
 	
 	if(status_code == 0) {
@@ -153,6 +237,48 @@ int commandList__wOpt(WorkState* work_state) {
 	
 	return status_code;
 	}
+
+
+
+
+int commandList__cOpt() {
+	int status_code = 0;
+
+	system("clear");
+
+	return status_code;
+	}
+
+
+
+int commandList__cflOpt(WorkState* work_state) {
+	int status_code = 0;
+
+	int n_i = 0;
+	char* new_filename = (char*) malloc(sizeof(char));
+	
+	printf("Enter new file name:\n> ");
+	char c;
+	while((c = getchar())!=EOF && c !='\n') {
+		new_filename = (char*) realloc(new_filename, sizeof(char) * (n_i+1));
+		new_filename[n_i] = c;
+		n_i++;
+		}
+	
+	new_filename = (char*) realloc(new_filename, sizeof(char)*(n_i+1));
+	new_filename[n_i] = '\0';
+
+	printf("%s\n", new_filename);
+	//free(new_file_name);
+
+	free(work_state->filename);
+	work_state->filename = new_filename;
+
+	return status_code;
+	} 
+
+
+
 
 int commandList__aflOpt(WorkState* work_state, int line) {
 	int status_code = 0;
@@ -207,6 +333,11 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 int commandList__rmlOpt(WorkState* work_state, int line) {
 	int status_code = 0;
 
+	if(line >= work_state->lines_amount) {
+		status_code = 1;
+		goto fall_with_error_rml;
+		}
+
 	if(status_code == 0){
 		free(work_state->content[line].str); // making string free. Now it is ready to be removed. Writing in order not to forget why did I write this line;
 		for(int i = line; i < work_state->lines_amount-1; ++i) {
@@ -230,16 +361,25 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 	int status_code = OK;
 	int recognized = -1; // -1 - unrecognized; 0 - recognized, but no function provided at the moment (only for in-dev versions); 1 - recognized
 
+	if (strcmp(prompt, "h") == OUTPUT__STRCMP_SAMESTR) {
+		printf("Commands:\n\nw - write\nout - output:\nout\n[line1] [line2]\n\nins - insert:\n[line] [position]\nrm - remove:\n[line] [position1] [position2]\n\nafl - add fracture line:\nafl\n[line]\nrml - remove line\nrml\n[line]\n\nh - show this message\n\n");
+		}
+
 	if(strcmp(prompt, "out") == OUTPUT__STRCMP_SAMESTR) {
 		int start_pos;
 		int end_pos;
 
 		printf("Enter start position and end position (lines):\n");
-		cin >> start_pos >> end_pos;
+//		cin >> start_pos >> end_pos;
 
-		char c_fix; // fix, which removes \n char from input. Bugfix for cin.
+		
+		char c_fix;
+		printf("> ");
+		scanf("%d", &start_pos);
 		while((c_fix = getchar())!=EOF && c_fix != '\n');
-
+		printf("> ");
+		scanf("%d", &end_pos);
+		while((c_fix=getchar())!=EOF && c_fix != '\n');		
 		int status = commandList__outOpt(work_state, start_pos, end_pos);
 
 		switch (status) {
@@ -280,11 +420,15 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		int line, position;
 		
 		printf("Enter line number and position:\n");
-		cin >> line >> position;
 		
 		char c_fix;
+		printf("> ");
+		scanf("%d", &line);
 		while((c_fix = getchar())!=EOF && c_fix != '\n');
-		
+		printf("> ");
+		scanf("%d", &position);
+		while((c_fix=getchar())!=EOF && c_fix != '\n');
+
 		int status = commandList__insOpt(work_state, line, position);
 		switch(status_code) {
 			case 1:
@@ -292,6 +436,40 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 			case 2:;
 			}
 		}
+
+
+	if(strcmp(prompt, "rm") == OUTPUT__STRCMP_SAMESTR) {
+		recognized = 1;
+
+		printf("Enter line, start position and end position\n");
+		int line, start_pos, end_pos;
+		//cin >> line >> start_pos >> end_pos;
+		
+		char c_fix;
+		printf("> ");
+		scanf("%d", &line);
+		while((c_fix = getchar())!= EOF && c_fix != '\n');
+		printf("> ");
+		scanf("%d", &start_pos);
+		while((c_fix = getchar())!=EOF && c_fix != '\n');
+		printf("> ");
+		scanf("%d", &end_pos);
+		while((c_fix = getchar())!=EOF && c_fix != '\n');
+
+		int status = commandList__rmOpt(work_state, line, start_pos, end_pos);
+		}
+
+
+	if(strcmp(prompt, "c") == OUTPUT__STRCMP_SAMESTR) {
+		recognized = 1;
+		int status = commandList__cOpt();
+		}
+
+	if(strcmp(prompt, "cfn") == OUTPUT__STRCMP_SAMESTR) {
+		recognized = 1;
+		int status = commandList__cflOpt(work_state);
+		}
+
 
 	if(strcmp(prompt, "w") == OUTPUT__STRCMP_SAMESTR) {
 		recognized = 1;
@@ -302,11 +480,12 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 
 	if(strcmp(prompt, "afl") == OUTPUT__STRCMP_SAMESTR) {
 		recognized = 1;
-
+		printf("Enter a line number, under which you want to make a fracture line\n");
 		int line;
-		cin >> line;
 
 		char c_fix;
+		printf("> ");
+		scanf("%d", &line);
 		while((c_fix = getchar()) != EOF && c_fix != '\n');
 
 		int status = commandList__aflOpt(work_state, line);
@@ -318,9 +497,11 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 
 			printf("Enter number of line, which you want to remove:\n");
 			int line;
-			cin >> line;
+			
 
 			char c_fix;
+			printf("> ");
+			scanf("%d", &line);
 			while((c_fix = getchar()) != EOF && c_fix != '\n');
 
 			int status = commandList__rmlOpt(work_state, line);

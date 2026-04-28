@@ -19,7 +19,7 @@ int main (int argc, char** argv) {
 	if (strcmp(argv[1], "--help") == OUTPUT__STRCMP_SAMESTR) {
 		cout << HELP_LIST_OUTPUT << endl;
 	} else {
-		int editorControlState = editorControl(argv);
+		int editor_control_state = editorControl(argv);
 		}
 
 	return status_code;
