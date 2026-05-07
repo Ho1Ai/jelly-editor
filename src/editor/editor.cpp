@@ -17,23 +17,6 @@ using namespace std;
 
 
 
-
-void LOCAL__dropInformation(WorkState* work_state) {
-	for(int i = 0 ; i < work_state->lines_amount ; ++i) {
-		printf("%s\n", work_state->content[i].str);
-		}
-	}
-
-
-
-int LOCAL__createSwap(WorkState* work_state) {
-	
-	}
-
-
-
-
-
 int initializeStringsWithZero(WorkState* work_state, int length) {
 	int status_code = 0;
 
@@ -82,8 +65,10 @@ int commandList__outOpt(WorkState* work_state, int start_pos, int end_pos) {
 		local_end_pos = end_pos;
 		}
 
+	//printf("%d\n", work_state->lines_amount); // debug line
+
 	if (end_pos > work_state->lines_amount-1) {
-		end_pos = work_state->lines_amount - 1;
+		local_end_pos = work_state->lines_amount - 1;
 		}
 
 	for (int i = local_start_pos; i <= local_end_pos; ++i) {
@@ -122,7 +107,7 @@ int commandList__rmOpt(WorkState* work_state, int line, int position_start, int 
 	if(position_end >= work_state->content[line].length) {
 		//printf("position end is above line length. Setting position end as line length as default.\n");
 		position_end = work_state->content[line].length - 1;
-		status_code = 4;
+		status_code = 5;
 		goto fall_with_error__rm;
 		}
 	
@@ -251,7 +236,7 @@ int commandList__cOpt() {
 
 
 
-int commandList__cflOpt(WorkState* work_state) {
+int commandList__cfnOpt(WorkState* work_state) {
 	int status_code = 0;
 
 	int n_i = 0;
@@ -289,6 +274,8 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 		}*/
 	if(line>=work_state->lines_amount) {
 		line = work_state->lines_amount;
+		status_code = 2;
+		goto fall_with_error__afl;
 		}
 	
 	if(line < 0) {
@@ -338,6 +325,11 @@ int commandList__rmlOpt(WorkState* work_state, int line) {
 		goto fall_with_error_rml;
 		}
 
+	if (line < 0) {
+		status_code = 2;
+		goto fall_with_error_rml;
+		}
+
 	if(status_code == 0){
 		free(work_state->content[line].str); // making string free. Now it is ready to be removed. Writing in order not to forget why did I write this line;
 		for(int i = line; i < work_state->lines_amount-1; ++i) {
@@ -363,6 +355,11 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 
 	if (strcmp(prompt, "h") == OUTPUT__STRCMP_SAMESTR) {
 		printf("Commands:\n\nw - write\nout - output:\nout\n[line1] [line2]\n\nins - insert:\n[line] [position]\nrm - remove:\n[line] [position1] [position2]\n\nafl - add fracture line:\nafl\n[line]\nrml - remove line\nrml\n[line]\n\nh - show this message\n\n");
+		}
+	
+	if (strcmp(prompt, "verc") == OUTPUT__STRCMP_SAMESTR) {
+		recognized = 1;
+		printf("Current version: %s\n", VERC__CURR_VERSION);
 		}
 
 	if(strcmp(prompt, "out") == OUTPUT__STRCMP_SAMESTR) {
@@ -395,7 +392,7 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 
 
 
-
+	
 
 
 
@@ -432,8 +429,11 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		int status = commandList__insOpt(work_state, line, position);
 		switch(status_code) {
 			case 1:
-			
-			case 2:;
+				
+				break;
+			case 2:
+
+				break;
 			}
 		}
 
@@ -457,6 +457,24 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		while((c_fix = getchar())!=EOF && c_fix != '\n');
 
 		int status = commandList__rmOpt(work_state, line, start_pos, end_pos);
+		
+		switch(status) {
+			case 1:
+				printf("Entered line is less than 0.\n");
+				break;
+			case 2:
+				printf("Start position is less than 0.\n");
+				break;
+			case 3:
+				printf("Start position is greater than line length.\n");
+				break;
+			case 4:
+				printf("Line is greater than lines amount for file.\n");
+				break;
+			case 5:
+				printf("End position is greater than line length.\n");
+				break;
+			}
 		}
 
 
@@ -467,7 +485,8 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 
 	if(strcmp(prompt, "cfn") == OUTPUT__STRCMP_SAMESTR) {
 		recognized = 1;
-		int status = commandList__cflOpt(work_state);
+
+		int status = commandList__cfnOpt(work_state);	
 		}
 
 
@@ -489,6 +508,15 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		while((c_fix = getchar()) != EOF && c_fix != '\n');
 
 		int status = commandList__aflOpt(work_state, line);
+		
+		switch(status) {
+			case 1:
+				printf("Line is less than 0.\n");
+				break;
+			case 2:
+				printf("Line is greater than file length.\n");
+				break;
+			}
 		}
 
 
@@ -507,24 +535,19 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 			int status = commandList__rmlOpt(work_state, line);
 			
 			switch(status) {
-				
+				case 1:
+					printf("Line is greater than file length.\n");
+					break;
+
+				case 2:
+					printf("Line is less than 0.");
+					break;
 				}
 			} 
 
-		
-		if(strcmp(prompt, "raw") == OUTPUT__STRCMP_SAMESTR) {
-			recognized = 1;
-			//realization for raw mode editor
-			}
 
 
 
-
-	if (strcmp(prompt, "DEBUG__DROP") == OUTPUT__STRCMP_SAMESTR) {
-		LOCAL__dropInformation(work_state);
-
-		recognized = 1;
-		}
 
 
 
@@ -664,11 +687,5 @@ int freeAll(WorkState* work_state) {
 	free(work_state->filename);
 	free(work_state);
 
-	return status_code;
-	}
-
-int readConfig(WorkState* work_state) {
-	int status_code = 0; // 0 - OK, 1 - no config, 2 - couldn't read config (unknown error)
-	
 	return status_code;
 	}
