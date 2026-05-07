@@ -21,7 +21,6 @@ int initializeStringsWithZero(WorkState* work_state, int length) {
 	int status_code = 0;
 
 	for (int i = 0 ; i < length ; ++i) {
-		//printf("str %d\n", i);
 		work_state->content[i].str = new char[1];
 		work_state->content[i].length = 0;
 		work_state->content[i].last_reallocation_size = 1;
@@ -367,8 +366,6 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		int end_pos;
 
 		printf("Enter start position and end position (lines):\n");
-//		cin >> start_pos >> end_pos;
-
 		
 		char c_fix;
 		printf("> ");
@@ -567,10 +564,6 @@ int readConfig(WorkState* work_state);
 
 int editorControl(char** start_props) {
 	int status_code = OK;
-
-	//enableRawMode(); // decided to make it as an option
-	//printf("start_props: %s\n", start_props[1]); // checking if it gets argv. Debug
-
 	WorkState* work_state = (WorkState*) malloc(sizeof(WorkState)); // wow, it works... Understood after 12 hours of coding
 	readFile(work_state, start_props[1]);
 
@@ -586,17 +579,13 @@ int editorControl(char** start_props) {
 			if(curr_pos == curr_size-1){
 				reallocCharPtr(input_str, curr_size+32);
 				curr_size+=32;
-				//printf("reallocated: %d - %s\n", curr_size, input_str); // debug line
 				}
-			input_str[curr_pos] = c;
-			//printf("%c - %s\n", c, input_str); // debug line
+			input_str[curr_pos] = c; //printf("%c - %s\n", c, input_str); // debug line
 			curr_pos++;
 			}
 
 		reallocCharPtr(input_str, curr_pos+1);
-		input_str[curr_pos] = '\0'; // end of string
-
-		//printf("calling with: %s\n", input_str);
+		input_str[curr_pos] = '\0'; // end of string //printf("calling with: %s\n", input_str);
 		int recognize_status;
 		if(strcmp(input_str, "\0") == OUTPUT__STRCMP_SAMESTR) goto empty_str_fix;
 		//c = getchar(); // fix
@@ -636,13 +625,12 @@ int readFile(WorkState* work_state, char* filename) {
 
 
 	int lines_amount = countLines(work_state);
-	//printf("%d\n", lines_amount);
 	FILE* f_thread = fopen(work_state->filename, "r");
 	work_state->content = (String*) malloc(sizeof(String) * lines_amount);
 	work_state->lines_amount = lines_amount;
 
 	char c;
-	// #define ll long long
+	
 	int string_index = 0;
 	int string_column = 0;
 	
@@ -653,7 +641,6 @@ int readFile(WorkState* work_state, char* filename) {
 			if (work_state->content[string_index].last_reallocation_size <= string_column + 1) {
 				reallocCharPtr(work_state->content[string_index].str, work_state->content[string_index].last_reallocation_size+32);
 				work_state->content[string_index].last_reallocation_size += 32;
-				//printf("reallocating\n");
 				}
 			work_state->content[string_index].str[string_column] = c;
 			string_column++;
