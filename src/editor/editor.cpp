@@ -252,7 +252,7 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 	for(int i = work_state->lines_amount-1; i >= line ; --i) {
 		
 		}*/
-	if(line>=work_state->lines_amount) {
+	if(line>=work_state->lines_amount+1) {
 		line = work_state->lines_amount;
 		status_code = 2;
 		goto fall_with_error__afl;
