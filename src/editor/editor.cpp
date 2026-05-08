@@ -87,7 +87,6 @@ int commandList__rmOpt(WorkState* work_state, int line, int position_start, int 
 		}
 	
 	if(line >= work_state->lines_amount){
-		//printf("Line is above lines amount. setting to lines amount as default\n");
 		line = work_state->lines_amount - 1;
 		status_code = 4;
 		goto fall_with_error__rm;
@@ -104,46 +103,28 @@ int commandList__rmOpt(WorkState* work_state, int line, int position_start, int 
 		}
 	
 	if(position_end >= work_state->content[line].length) {
-		//printf("position end is above line length. Setting position end as line length as default.\n");
 		position_end = work_state->content[line].length - 1;
 		status_code = 5;
 		goto fall_with_error__rm;
 		}
 	
 	if(status_code == 0) {
-		char* line_start = (char*) malloc(sizeof(char)*position_start+1);
-		for(int i = 0 ; i < position_start; ++i) {
-			line_start[i] = work_state->content[line].str[i];
+		char* new_line = (char*) malloc(sizeof(char));
+		int xi = 0; 
+		int final_line_len = 1;
+		int ref_line_len = work_state->content[line].length;
+		while(work_state->content[line].str[xi] && xi < ref_line_len){
+			if (xi<position_start || xi>position_end){
+				++final_line_len;
+				new_line =(char*) realloc(new_line, final_line_len*sizeof(char));
+				new_line[final_line_len-2] = work_state->content[line].str[xi];
 			}
-		line_start[position_start] = '\0';
-		//printf("%s\n", line_start);
-		char* line_end = (char*) malloc(sizeof(char)*(work_state->content[line].length-position_end+1));
-		for(int i = 0 ; i < work_state->content[line].length-position_end; ++i){
-			line_end[i] = work_state->content[line].str[work_state->content[line].length-position_end+i+1];
-			}
-
-		line_end[position_end]='\0';
-		//printf("%s%s\n", line_start, line_end);
-		char* line_final = (char*) malloc(sizeof(char)*(position_start+work_state->content[line].length-position_end+1));
-		int line_length = 0;
-		for(int i = 0 ; i < position_start; ++i) {
-			line_final[i] = line_start[i];
-			line_length++;
-			}
-		int tmp_status = 0;
-		for(int i = 0 ; i < work_state->content[line].length-position_end; ++i){
-			line_final[position_start+i] = line_end[i];
-			tmp_status = i+1;
-			line_length++;
-			}
-		work_state->content[line].str[position_start+tmp_status] = '\0';
-		//printf("%s\n", line_final);
-		free(line_start);
-		free(line_end);
+			xi++;
+		} 
+		new_line[final_line_len-1] = '\0';
 		free(work_state->content[line].str);
-		work_state->content[line].str = line_final;
-		work_state->content[line].length = line_length;
-		work_state->content[line].last_reallocation_size = position_start+work_state->content[line].length-position_end+1;
+		
+		work_state->content[line].str=new_line;
 		}
 	
 
