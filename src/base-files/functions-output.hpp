@@ -4,6 +4,6 @@
 #define OUTPUT__STRCMP_SAMESTR 0
 #define OK 0
 #define MAIN__NOT_ENOUGH_ARGUMENTS 1
-#define VERC__CURR_VERSION "01010b (0.1.0b)"
+#define VERC__CURR_VERSION "01011b (0.1.1b)"
 
 #endif

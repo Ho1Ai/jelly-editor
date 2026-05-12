@@ -9,3 +9,7 @@ make:
 make_all:
 	$(CC) $(CFLAGS)
 
+install:
+	$(CC) $(CFLAGS)
+	sudo cp $(BUILD)/start.bin /usr/local/bin/jelly
+

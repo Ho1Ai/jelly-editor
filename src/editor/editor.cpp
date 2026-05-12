@@ -110,16 +110,16 @@ int commandList__rmOpt(WorkState* work_state, int line, int position_start, int 
 	
 	if(status_code == 0) {
 		char* new_line = (char*) malloc(sizeof(char));
-		int xi = 0; 
+		int i = 0; 
 		int final_line_len = 1;
 		int ref_line_len = work_state->content[line].length;
-		while(work_state->content[line].str[xi] && xi < ref_line_len){
-			if (xi<position_start || xi>position_end){
+		while(work_state->content[line].str[i] && i < ref_line_len){
+			if (i<position_start || i>position_end){
 				++final_line_len;
 				new_line =(char*) realloc(new_line, final_line_len*sizeof(char));
-				new_line[final_line_len-2] = work_state->content[line].str[xi];
+				new_line[final_line_len-2] = work_state->content[line].str[i];
 			}
-			xi++;
+			i++;
 		} 
 		new_line[final_line_len-1] = '\0';
 		free(work_state->content[line].str);
@@ -150,7 +150,6 @@ int commandList__insOpt(WorkState* work_state, int line, int position) {
 		}
 	
 	if (position > work_state->content[line].length) {
-		//printf("Position is greater than line length. Setting on line length as maximum possible position.\n");
 		position = work_state->content[line].length;
 		status_code = 3;
 		goto fall_with_error__ins;
@@ -181,7 +180,6 @@ int commandList__insOpt(WorkState* work_state, int line, int position) {
 		new_string = (char*) realloc(new_string, sizeof(char)*(i+1));
 		new_string[i] = '\0';
 
-		//printf("new line: %s\n", new_string); // debug line. Added in order to check if the code cuts any part of line. In fact, line is built from 3 parts: old pre-position, new input, old post-position
 		free(work_state->content[line].str);
 		work_state->content[line].str = new_string;
 		work_state->content[line].length = i;
@@ -233,7 +231,7 @@ int commandList__cfnOpt(WorkState* work_state) {
 	new_filename = (char*) realloc(new_filename, sizeof(char)*(n_i+1));
 	new_filename[n_i] = '\0';
 
-	printf("%s\n", new_filename);
+	// printf("%s\n", new_filename);
 	//free(new_file_name);
 
 	free(work_state->filename);
@@ -247,11 +245,7 @@ int commandList__cfnOpt(WorkState* work_state) {
 
 int commandList__aflOpt(WorkState* work_state, int line) {
 	int status_code = 0;
-	/*work_state->content = (String*) realloc(work_state->content, (1 + work_state->lines_amount++)*sizeof(String))
-	
-	for(int i = work_state->lines_amount-1; i >= line ; --i) {
-		
-		}*/
+
 	if(line>=work_state->lines_amount+1) {
 		line = work_state->lines_amount;
 		status_code = 2;
@@ -264,34 +258,18 @@ int commandList__aflOpt(WorkState* work_state, int line) {
 		}
 	
 	if(status_code == 0) {
-		work_state->content = (String*)realloc(work_state->content, (1+work_state->lines_amount++)*sizeof(String));
+		work_state->content = (String*)realloc(work_state->content, 
+			(1+work_state->lines_amount++)*sizeof(String));
 
 		String empty_line{(char*) malloc(sizeof(char)), 0, 1};
 		
-		empty_line.str[0] = EOL; // yeah, the bug was here... Lol, so hard to see, that I forgot about end of line
+		empty_line.str[0] = EOL;
 
 		for (int i = work_state->lines_amount-1 ; i  > line ; --i) {
 			work_state->content[i] = work_state->content[i-1];
 		}
 		work_state->content[line] = empty_line;
-		/*		
-		if(line == 0) {
-			printf("Setting 0 line on \\0");
-			String empty = String{(char*)malloc(sizeof(char)), 0, 1};
-			empty.str[0] = '\0';
-			work_state->content[0] = empty;	 
-			}*/
-		
-	/*
-	String new_str;
-	new_str.str = (char*)malloc(1*sizeof(char));
-	new_str.str[0] = '\0';
-	new_str.length = 0;
-	new_str.last_reallocation_size = 1;
-	work_state->content[line] = new_str;
-*/
-	}
-
+		}
 	fall_with_error__afl:
 	return status_code;
 	}
@@ -311,12 +289,13 @@ int commandList__rmlOpt(WorkState* work_state, int line) {
 		}
 
 	if(status_code == 0){
-		free(work_state->content[line].str); // making string free. Now it is ready to be removed. Writing in order not to forget why did I write this line;
+		free(work_state->content[line].str);
 		for(int i = line; i < work_state->lines_amount-1; ++i) {
 			work_state->content[i] = work_state->content[i+1];
 			}
 		work_state->lines_amount--;
-		work_state->content = (String*)realloc(work_state->content, sizeof(String)*work_state->lines_amount);
+		work_state->content = (String*)realloc(work_state->content, 
+			sizeof(String)*work_state->lines_amount);
 		}
 
 	fall_with_error_rml:
@@ -334,7 +313,7 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 	int recognized = -1; // -1 - unrecognized; 0 - recognized, but no function provided at the moment (only for in-dev versions); 1 - recognized
 
 	if (strcmp(prompt, "h") == OUTPUT__STRCMP_SAMESTR) {
-		printf("Commands:\n\nw - write\nout - output:\nout\n[line1] [line2]\n\nins - insert:\n[line] [position]\nrm - remove:\n[line] [position1] [position2]\n\nafl - add fracture line:\nafl\n[line]\nrml - remove line\nrml\n[line]\n\nh - show this message\n\n");
+		printf("Commands:\n\nw - write\nout - output:\nout\n[line1] [line2]\n\nins - insert:\n[line] [position]\nrm - remove:\n[line] [position1] [position2]\n\nafl - add fracture line:\nafl\n[line]\nrml - remove line\nrml\n[line]\n\nverc - current version\nh - show this message\n\n");
 		}
 	
 	if (strcmp(prompt, "verc") == OUTPUT__STRCMP_SAMESTR) {
@@ -405,12 +384,15 @@ int recognizeCommand(WorkState* work_state, char* prompt) {
 		while((c_fix=getchar())!=EOF && c_fix != '\n');
 
 		int status = commandList__insOpt(work_state, line, position);
-		switch(status_code) {
+		switch(status) {
 			case 1:
-				
+				printf("Line is less than 0.\n");
 				break;
 			case 2:
-
+				printf("Position is less than 0.\n");
+				break;
+			case 3:
+				printf("Position are outside the line length.\n");
 				break;
 			}
 		}
@@ -545,7 +527,7 @@ int readConfig(WorkState* work_state);
 
 int editorControl(char** start_props) {
 	int status_code = OK;
-	WorkState* work_state = (WorkState*) malloc(sizeof(WorkState)); // wow, it works... Understood after 12 hours of coding
+	WorkState* work_state = (WorkState*) malloc(sizeof(WorkState)); 
 	readFile(work_state, start_props[1]);
 
 	bool loop_flag = true;
@@ -620,18 +602,20 @@ int readFile(WorkState* work_state, char* filename) {
 	while((c=fgetc(f_thread)) != EOF) {
 		if (c != '\n') {
 			if (work_state->content[string_index].last_reallocation_size <= string_column + 1) {
-				reallocCharPtr(work_state->content[string_index].str, work_state->content[string_index].last_reallocation_size+32);
+				reallocCharPtr(work_state->content[string_index].str, 
+					work_state->content[string_index].last_reallocation_size+32);
 				work_state->content[string_index].last_reallocation_size += 32;
 				}
 			work_state->content[string_index].str[string_column] = c;
 			string_column++;
 			work_state->content[string_index].length++;
 			} else {
-			reallocCharPtr(work_state->content[string_index].str, work_state->content[string_index].length+1);
-			work_state->content[string_index].last_reallocation_size = work_state->content[string_index].length+1;
+			reallocCharPtr(work_state->content[string_index].str, 
+				work_state->content[string_index].length+1);
+			work_state->content[string_index].last_reallocation_size = 
+				work_state->content[string_index].length+1;
 			work_state->content[string_index].str[work_state->content[string_index].length] = '\0';
 			work_state->content[string_index].length++;
-
 
 			string_column = 0;
 			string_index++;
